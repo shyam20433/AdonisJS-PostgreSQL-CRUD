@@ -1,0 +1,10 @@
+1. Pagination               ||done
+2. Exception Handling       ||done
+3. Transactions             ||done
+4. Password Hashing 
+5. Service Layer            ||done
+6. Lifecycle Hooks          ||done
+7. File Upload
+8. Many-to-Many
+9. Events
+10. Repository Pattern
