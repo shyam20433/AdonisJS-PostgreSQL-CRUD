@@ -1,6 +1,7 @@
 import Database from '@ioc:Adonis/Lucid/Database'
 import User from 'App/Models/User'
 import Task from 'App/Models/Task'
+import TransactionFailedException from 'App/Exceptions/TransactionFailedException'
 
 export default class UserTaskService {
 
@@ -38,11 +39,10 @@ export default class UserTaskService {
 
       await trx.rollback()
 
-      throw error
+      throw new TransactionFailedException()
     }
   }
 }
-
 
 /* 
 import Database from '@ioc:Adonis/Lucid/Database'

@@ -7,7 +7,7 @@ import UserValidator from 'App/Validators/UserValidator'
 
 import UserTaskService from 'App/Services/UserTaskService'
 import IdValidator from 'App/Validators/IdValidator'
-
+import UserNotFoundException from 'App/Exceptions/UserNotFoundException'
 
 //import UserNotFoundException from 'App/Exceptions/UserNotFoundException'
 
@@ -93,11 +93,8 @@ export default class UsersController {
         const user = await User.find(payload.id)
 
         if (!user) {
-            return {
-                message: 'No User Found !!',
-            }
+            throw new UserNotFoundException()
         }
-
         return user
     }
 
@@ -129,9 +126,7 @@ export default class UsersController {
         const user = await User.find(payload.id)
 
         if (!user) {
-            return {
-                message: 'User Not Found'
-            }
+            throw new UserNotFoundException()
         }
 
         await user.delete()
@@ -144,9 +139,7 @@ export default class UsersController {
     public async updateUser({ params, request }: HttpContextContract) {
         const user = await User.find(params.id)
         if (!user) {
-            return {
-                message: 'No User Found !!',
-            }
+            throw new UserNotFoundException()
         }
         const data = await request.validate(UpdateUserValidator)
         user.merge(data)
@@ -169,7 +162,10 @@ export default class UsersController {
 
 
     public async createUserTask({ request }: HttpContextContract) {
+
         const data = request.all()
+
+        console.log('REQUEST DATA = ', data)
 
         return await UserTaskService.createUserAndTask(data)
     }

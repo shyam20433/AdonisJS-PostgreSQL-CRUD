@@ -6,7 +6,7 @@ import IdValidator from 'App/Validators/IdValidator'
 
 import UpdateTaskValidator from 'App/Validators/UpdateTaskValidator'
 import PatchTaskValidator from 'App/Validators/PatchTaskValidator'
-
+import TaskNotFoundException from 'App/Exceptions/TaskNotFoundException'
 
 
 
@@ -30,9 +30,7 @@ export default class TasksController {
     })
     const task = await Task.find(data.id)
     if (!task) {
-      return {
-        message: 'No task found !',
-      }
+      throw new TaskNotFoundException()
     }
     return task
   }
@@ -48,9 +46,7 @@ export default class TasksController {
     const data = await request.validate(UpdateTaskValidator)
     const result = await Task.find(params.id)
     if (!result) {
-      return {
-        message: 'No task found !',
-      }
+      throw new TaskNotFoundException()
     }
     result.merge(data)
     await result.save()
@@ -61,9 +57,7 @@ export default class TasksController {
     const data = await request.validate(PatchTaskValidator)
     const result = await Task.find(params.id)
     if (!result) {
-      return {
-        message: 'No task found !',
-      }
+      throw new TaskNotFoundException()
     }
     result.merge(data)
     await result.save()
@@ -79,9 +73,7 @@ export default class TasksController {
     const task = await Task.find(payload.id)
 
     if (!task) {
-      return {
-        message: 'No task found!',
-      }
+      throw new TaskNotFoundException()
     }
 
     await task.delete()
