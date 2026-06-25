@@ -9,6 +9,8 @@ import UserTaskService from 'App/Services/UserTaskService'
 import IdValidator from 'App/Validators/IdValidator'
 import UserNotFoundException from 'App/Exceptions/UserNotFoundException'
 
+
+import PaginationValidator from 'App/Validators/PaginationValidator'
 //import UserNotFoundException from 'App/Exceptions/UserNotFoundException'
 
 export default class UsersController {
@@ -18,17 +20,23 @@ export default class UsersController {
           return await User.query().paginate(1,5)
       } */
     public async get({ request }: HttpContextContract) {
-        const page = request.input('page', 1)
-        const limit = request.input('limit', 5)
 
-        console.log('PAGE=', page)
-        console.log('LIMIT=', limit)
+        try {
 
-        const users = await User.query().orderBy('id', 'desc').paginate(page, limit)
+            const { page = 1, limit = 5 } =
+                await request.validate(PaginationValidator)
 
-        return users
+            return await User
+                .query()
+                .orderBy('id', 'desc')
+                .paginate(page, limit)
+
+        } catch (error) {
+
+            throw error
+
+        }
     }
-
     /*
      const data = request.only([
         'name',
@@ -80,24 +88,40 @@ export default class UsersController {
       */
 
     public async insertUser({ request }: HttpContextContract) {
-        const data = await request.validate(UserValidator)
-        return await UserService.createUser(data)
-    }
 
-    public async getUser({ request, params }: HttpContextContract) {
-        const payload = await request.validate({
-            schema: new IdValidator({} as HttpContextContract).schema,
-            data: params,
-        })
+        try {
 
-        const user = await User.find(payload.id)
+            const data = await request.validate(UserValidator)
 
-        if (!user) {
-            throw new UserNotFoundException()
+            return await UserService.createUser(data)
+
+        } catch (error) {
+
+            throw error
+
         }
-        return user
     }
 
+    public async getUser({ request }: HttpContextContract) {
+
+        try {
+
+            const payload = await request.validate(IdValidator)
+
+            const user = await User.find(payload.id)
+
+            if (!user) {
+                throw new UserNotFoundException()
+            }
+
+            return user
+
+        } catch (error) {
+
+            throw error
+
+        }
+    }
     /*
         public async deleteUser({ params }: HttpContextContract) {
     
@@ -117,56 +141,110 @@ export default class UsersController {
      */
 
 
-    public async deleteUser({ request, params }: HttpContextContract) {
-        const payload = await request.validate({
-            schema: new IdValidator({} as HttpContextContract).schema,
-            data: params,
-        })
+    public async deleteUser({ request }: HttpContextContract) {
 
-        const user = await User.find(payload.id)
+        try {
 
-        if (!user) {
-            throw new UserNotFoundException()
-        }
+            const payload = await request.validate(IdValidator)
 
-        await user.delete()
+            const user = await User.find(payload.id)
 
-        return {
-            message: 'User Deleted Successfully'
+            if (!user) {
+                throw new UserNotFoundException()
+            }
+
+            await user.delete()
+
+            return {
+                message: 'User Deleted Successfully'
+            }
+
+        } catch (error) {
+
+            throw error
+
         }
     }
 
-    public async updateUser({ params, request }: HttpContextContract) {
-        const user = await User.find(params.id)
-        if (!user) {
-            throw new UserNotFoundException()
+    public async updateUser({ request }: HttpContextContract) {
+
+        try {
+
+            const payload = await request.validate(IdValidator)
+
+            const data = await request.validate(UpdateUserValidator)
+
+            const user = await User.find(payload.id)
+
+            if (!user) {
+                throw new UserNotFoundException()
+            }
+
+            user.merge(data)
+
+            await user.save()
+
+            return user
+
+        } catch (error) {
+
+            throw error
+
         }
-        const data = await request.validate(UpdateUserValidator)
-        user.merge(data)
-        await user.save()
-        return user
     }
 
     public async preloadTasksbyUser() {
-        const data = await User.query().preload('tasks')
-        return data
-    }
 
+        try {
+
+            const data = await User.query().preload('tasks')
+
+            return data
+
+        } catch (error) {
+
+            throw error
+
+        }
+    }
     public async joinsTasksbyUser() {
-        const data = await Database.from('users')
-            .join('tasks', 'users.id', 'tasks.user_id')
-            .select('users.id', 'users.name', 'users.email', 'tasks.title', 'tasks.status')
 
-        return data
+        try {
+
+            const data = await Database
+                .from('users')
+                .join('tasks', 'users.id', 'tasks.user_id')
+                .select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'tasks.title',
+                    'tasks.status'
+                )
+
+            return data
+
+        } catch (error) {
+
+            throw error
+
+        }
     }
-
 
     public async createUserTask({ request }: HttpContextContract) {
 
-        const data = request.all()
+        try {
 
-        console.log('REQUEST DATA = ', data)
+            const data = await request.validate(UserValidator)
 
-        return await UserTaskService.createUserAndTask(data)
+            console.log('REQUEST DATA = ', data)
+
+            return await UserTaskService.createUserAndTask(data)
+
+        } catch (error) {
+
+            throw error
+
+        }
     }
 }

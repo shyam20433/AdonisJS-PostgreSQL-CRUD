@@ -9,7 +9,9 @@ export default class Global {
     console.log('Method:', request.method())
     console.log('URL:', request.url())
     console.log('Time:', new Date())
+    
     console.log('Request Finished')
+
     console.log('-----------------------')
   }
 }

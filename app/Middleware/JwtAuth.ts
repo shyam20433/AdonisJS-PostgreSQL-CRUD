@@ -1,4 +1,4 @@
- import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import jwt from 'jsonwebtoken'
 import Env from '@ioc:Adonis/Core/Env'
 
@@ -13,6 +13,7 @@ export default class JwtAuth {
 
     if (!token) {
       return response.unauthorized({
+        success: false,
         message: 'Token Missing'
       })
     }
@@ -26,14 +27,17 @@ export default class JwtAuth {
 
       console.log(payload)
 
-      await next()
-
     } catch (error) {
+
       console.log('JWT ERROR =', error)
 
       return response.unauthorized({
-        message: String(error)
+        success: false,
+        message: 'Invalid Token'
       })
     }
+
+    // Controller executes only after JWT verification succeeds
+    await next()
   }
-} 
+}

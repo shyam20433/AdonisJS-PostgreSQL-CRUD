@@ -3,83 +3,154 @@ import Task from 'App/Models/Task'
 
 import TaskValidator from 'App/Validators/TaskValidator'
 import IdValidator from 'App/Validators/IdValidator'
-
 import UpdateTaskValidator from 'App/Validators/UpdateTaskValidator'
 import PatchTaskValidator from 'App/Validators/PatchTaskValidator'
+import PaginationValidator from 'App/Validators/PaginationValidator'
+
 import TaskNotFoundException from 'App/Exceptions/TaskNotFoundException'
 
-
-
 //import IdValidator from 'App/Validators/IdValidator'
+
 export default class TasksController {
+
   public async get({ request }: HttpContextContract) {
 
-    const page = request.input('page', 1)
-    const limit = request.input('limit', 5)
-    console.log('PAGE=', page)
-    console.log('LIMIT=', limit)
-    const data = await Task.query().orderBy('id', 'desc').paginate(page, limit)
+    try {
 
-    return data
-  }
+      const { page = 1, limit = 5 } =
+        await request.validate(PaginationValidator)
 
-  public async getTask({ request, params }: HttpContextContract) {
-    const data = await request.validate({
-      schema: new IdValidator({} as HttpContextContract).schema,
-      data: params,
-    })
-    const task = await Task.find(data.id)
-    if (!task) {
-      throw new TaskNotFoundException()
+      const data = await Task
+        .query()
+        .orderBy('id', 'desc')
+        .paginate(page, limit)
+
+      return data
+
+    } catch (error) {
+
+      throw error
+
     }
-    return task
   }
 
+  public async getTask({ request }: HttpContextContract) {
+
+    try {
+
+      const payload = await request.validate(IdValidator)
+
+      const task = await Task.find(payload.id)
+
+      if (!task) {
+        throw new TaskNotFoundException()
+      }
+
+      return task
+
+    } catch (error) {
+
+      throw error
+
+    }
+  }
   public async insertTask({ request }: HttpContextContract) {
-    const data = await request.validate(TaskValidator)
 
-    const result = Task.create(data)
-    return result
+    try {
+
+      const data = await request.validate(TaskValidator)
+
+      return await Task.create(data)
+
+    } catch (error) {
+
+      throw error
+
+    }
   }
 
-  public async updateTask({ params, request }: HttpContextContract) {
-    const data = await request.validate(UpdateTaskValidator)
-    const result = await Task.find(params.id)
-    if (!result) {
-      throw new TaskNotFoundException()
+  public async updateTask({
+    request
+  }: HttpContextContract) {
+
+    try {
+
+      const payload = await request.validate(IdValidator)
+
+      const data = await request.validate(UpdateTaskValidator)
+
+      const task = await Task.find(payload.id)
+
+      if (!task) {
+        throw new TaskNotFoundException()
+      }
+
+      task.merge(data)
+
+      await task.save()
+
+      return task
+
+    } catch (error) {
+
+      throw error
+
     }
-    result.merge(data)
-    await result.save()
-    return result
   }
 
-  public async patchTask({ params, request }: HttpContextContract) {
-    const data = await request.validate(PatchTaskValidator)
-    const result = await Task.find(params.id)
-    if (!result) {
-      throw new TaskNotFoundException()
+  public async patchTask({
+    request
+  }: HttpContextContract) {
+
+    try {
+
+      const payload = await request.validate(IdValidator)
+
+      const data = await request.validate(PatchTaskValidator)
+
+      const task = await Task.find(payload.id)
+
+      if (!task) {
+        throw new TaskNotFoundException()
+      }
+
+      task.merge(data)
+
+      await task.save()
+
+      return task
+
+    } catch (error) {
+
+      throw error
+
     }
-    result.merge(data)
-    await result.save()
-    return result
   }
 
-  public async deleteTask({ request, params }: HttpContextContract) {
-    const payload = await request.validate({
-      schema: new IdValidator({} as HttpContextContract).schema,
-      data: params,
-    })
+  public async deleteTask({
+    request
+  }: HttpContextContract) {
 
-    const task = await Task.find(payload.id)
+    try {
 
-    if (!task) {
-      throw new TaskNotFoundException()
-    }
+      const payload = await request.validate(IdValidator)
 
-    await task.delete()
+      const task = await Task.find(payload.id)
 
-    return {
-      message: 'Task has been deleted',
+      if (!task) {
+        throw new TaskNotFoundException()
+      }
+
+      await task.delete()
+
+      return {
+        message: 'Task Deleted Successfully'
+      }
+
+    } catch (error) {
+
+      throw error
+
     }
   }
 }
